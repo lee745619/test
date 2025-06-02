@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>分機查詢系統</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+      background-color: #f5f7fa;
+    }
+    h1 {
+      text-align: center;
+      color: #0056b3;
+    }
+    input {
+      width: 100%;
+      padding: 1rem;
+      font-size: 1.2rem;
+      margin: 1rem 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    .result {
+      background: white;
+      padding: 1rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .entry {
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #eee;
+    }
+    .entry:last-child {
+      border-bottom: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>亞東預拌｜分機查詢</h1>
+  <input type="text" id="search" placeholder="輸入姓名、分機、職稱或單位...">
+  <div class="result" id="result"></div>
+
+  <script>
+    const SHEET_URL = "https://opensheet.elk.sh/1Qy-yFkTJ5enHhDRXBn3i_hb_FG0HfmQcMxxCw2U-4D4/%E5%88%86%E6%A9%9F%E8%A1%A8";
+
+    async function fetchData() {
+      const res = await fetch(SHEET_URL);
+      return await res.json();
+    }
+
+    function match(entry, keyword) {
+      const combined = `${entry["姓名"]}${entry["分機"]}${entry["職稱"]}${entry["單位"]}`;
+      return combined.includes(keyword);
+    }
+
+    function display(results) {
+      const container = document.getElementById("result");
+      container.innerHTML = results.length ? "" : "❗ 找不到符合的資料";
+      results.forEach(r => {
+        const div = document.createElement("div");
+        div.className = "entry";
+        div.innerHTML = `
+          <strong>${r["姓名"]}</strong>｜分機：${r["分機"]}<br>
+          職稱：${r["職稱"] || "－"}｜單位：${r["單位"] || "－"}
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    document.getElementById("search").addEventListener("input", async e => {
+      const keyword = e.target.value.trim();
+      if (!keyword) return document.getElementById("result").innerHTML = "";
+      const data = await fetchData();
+      const filtered = data.filter(r => match(r, keyword));
+      display(filtered);
+    });
+  </script>
+</body>
+</html>
